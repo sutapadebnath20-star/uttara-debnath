@@ -14,7 +14,9 @@ import {
   BookOpen, 
   AlertCircle,
   Lightbulb,
-  ArrowRight
+  ArrowRight,
+  CreditCard,
+  ShieldCheck
 } from 'lucide-react';
 import { LearningPath, Milestone, LessonItem, StudentProfile, SkillLevel, LearningGoal } from '../types';
 import { STARTER_LEARNING_PATHS } from '../data/curricula';
@@ -26,6 +28,7 @@ interface LearningPathViewProps {
   onUpdateProfile: (profile: Partial<StudentProfile>) => void;
   onOpenProjectIdea: (idea: string) => void;
   onOpenChallenge: (challengeCategory?: string) => void;
+  onOpenEnrollment: () => void;
 }
 
 export const LearningPathView: React.FC<LearningPathViewProps> = ({
@@ -34,7 +37,8 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   profile,
   onUpdateProfile,
   onOpenProjectIdea,
-  onOpenChallenge
+  onOpenChallenge,
+  onOpenEnrollment
 }) => {
   // Modal states
   const [showGenerator, setShowGenerator] = useState<boolean>(false);
@@ -251,6 +255,74 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Student Enrollment & Admission Status Banner (500 RS Charge) */}
+      <div className={`rounded-2xl p-5 sm:p-6 border transition-all ${
+        profile.isEnrolled 
+          ? 'bg-gradient-to-r from-emerald-950/40 via-slate-900 to-indigo-950/30 border-emerald-500/40 shadow-lg shadow-emerald-950/20'
+          : 'bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border-indigo-500/30 shadow-lg shadow-indigo-950/20'
+      }`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md ${
+              profile.isEnrolled 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
+            }`}>
+              {profile.isEnrolled ? <ShieldCheck className="w-6 h-6" /> : <CreditCard className="w-6 h-6" />}
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                  profile.isEnrolled 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                }`}>
+                  {profile.isEnrolled ? 'Verified Student Pass Active' : 'Official Course Admission'}
+                </span>
+                <span className="text-xs text-slate-400">Fixed Fee: <strong className="text-emerald-400">₹500.00 INR</strong></span>
+              </div>
+
+              <h3 className="text-base sm:text-lg font-bold text-white">
+                {profile.isEnrolled 
+                  ? `Full Access Unlocked for ${profile.name || 'Student'} (₹500 Paid)`
+                  : 'Take Charge of Your Coding Journey with the ₹500 All-Access Pass'}
+              </h3>
+
+              <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                {profile.isEnrolled
+                  ? `Enrollment ID: ${profile.paymentReceipt?.enrollmentNo || 'ACAD-IN-500-ACTIVE'} • Lifetime access to all 3 milestones, code sandbox challenges, 24/7 AI tutor, and certified completion.`
+                  : 'Enroll with an all-inclusive tuition charge of ₹500. Includes complete multi-milestone roadmaps, interactive code execution, unlimited 1-on-1 AI Teacher tutoring, and verified certificate.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto">
+            {profile.isEnrolled ? (
+              <button
+                id="learning-path-receipt-btn"
+                type="button"
+                onClick={onOpenEnrollment}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>View Tax Invoice (₹500)</span>
+              </button>
+            ) : (
+              <button
+                id="learning-path-enroll-btn"
+                type="button"
+                onClick={onOpenEnrollment}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Enroll Now for ₹500</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Milestones Road Map */}
       <div className="space-y-8">

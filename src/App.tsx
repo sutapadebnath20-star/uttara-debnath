@@ -9,7 +9,8 @@ import { LearningPathView } from './components/LearningPathView';
 import { ChallengesView } from './components/ChallengesView';
 import { ProjectAssistantView } from './components/ProjectAssistantView';
 import { AiTeacherModal } from './components/AiTeacherModal';
-import { StudentProfile, LearningPath } from './types';
+import { PaymentEnrollmentModal } from './components/PaymentEnrollmentModal';
+import { StudentProfile, LearningPath, PaymentReceipt } from './types';
 import { STARTER_LEARNING_PATHS } from './data/curricula';
 import { Sparkles, MessageSquareCode, Award, BookOpen, Code2, Rocket, Trophy, Flame } from 'lucide-react';
 
@@ -37,7 +38,9 @@ export default function App() {
       xp: 120,
       streakDays: 3,
       completedLessonIds: ['l1-1'],
-      completedChallengeIds: []
+      completedChallengeIds: [],
+      isEnrolled: false,
+      enrollmentFeePaid: 0
     };
   });
 
@@ -59,6 +62,9 @@ export default function App() {
   const [isTeacherOpen, setIsTeacherOpen] = useState<boolean>(false);
   const [teacherContext, setTeacherContext] = useState<string>('General AI Coding');
 
+  // 500 RS Enrollment Payment Modal state
+  const [isEnrollmentOpen, setIsEnrollmentOpen] = useState<boolean>(false);
+
   // Sync with LocalStorage
   useEffect(() => {
     try {
@@ -79,6 +85,17 @@ export default function App() {
   // Update profile helper
   const handleUpdateProfile = (updated: Partial<StudentProfile>) => {
     setProfile(prev => ({ ...prev, ...updated }));
+  };
+
+  // Payment completed handler for 500 RS charge
+  const handlePaymentSuccess = (receipt: PaymentReceipt) => {
+    setProfile(prev => ({
+      ...prev,
+      isEnrolled: true,
+      enrollmentFeePaid: 500,
+      paymentReceipt: receipt,
+      xp: prev.xp + 100 // Bonus XP for formal course enrollment!
+    }));
   };
 
   // Switch to Project Assistant with prefilled idea from Capstone Project
@@ -114,6 +131,7 @@ export default function App() {
         }}
         profile={profile}
         onOpenTeacher={() => setIsTeacherOpen(true)}
+        onOpenEnrollment={() => setIsEnrollmentOpen(true)}
       />
 
       {/* Main Container */}
@@ -126,6 +144,7 @@ export default function App() {
             onUpdateProfile={handleUpdateProfile}
             onOpenProjectIdea={handleOpenProjectIdea}
             onOpenChallenge={handleOpenChallenge}
+            onOpenEnrollment={() => setIsEnrollmentOpen(true)}
           />
         )}
 
@@ -167,17 +186,25 @@ export default function App() {
         activeContext={teacherContext}
       />
 
+      {/* 500 RS Course Enrollment & Tax Invoice Modal */}
+      <PaymentEnrollmentModal
+        isOpen={isEnrollmentOpen}
+        onClose={() => setIsEnrollmentOpen(false)}
+        profile={profile}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/80 text-xs text-slate-400 py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-300">AI CodeAcademy</span>
-            <span>• Free AI-Powered Coding Education for Students Worldwide</span>
+            <span>• Certified AI Coding Track (Course Fee: ₹500 INR)</span>
           </div>
           <div className="flex items-center gap-4 text-slate-400">
             <span>Powered by Gemini AI</span>
             <span>•</span>
-            <span>Socratic Learning & Hands-On Coding</span>
+            <span>Tax Invoicing & Socratic Learning</span>
           </div>
         </div>
       </footer>

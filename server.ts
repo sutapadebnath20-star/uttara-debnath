@@ -399,6 +399,142 @@ Respond as Professor Byte directly to the student.`;
   }
 });
 
+// --- 5. PAYMENT & ENROLLMENT (500 RS COURSE CHARGE) ---
+interface PaymentRecord {
+  receiptId: string;
+  orderId: string;
+  studentName: string;
+  amount: number;
+  currency: string;
+  formattedAmount: string;
+  paymentMethod: 'UPI' | 'Card' | 'NetBanking';
+  paymentDetails: string;
+  utrNumber: string;
+  status: 'SUCCESS' | 'PENDING' | 'FAILED';
+  timestamp: string;
+  enrollmentNo: string;
+  accessPassKey: string;
+  breakdown: {
+    baseAmount: number;
+    gstAmount: number;
+    totalAmount: number;
+  };
+}
+
+const paymentLedger: Map<string, PaymentRecord> = new Map();
+
+// Create 500 RS payment order
+app.post('/api/payment/create-order', (req, res) => {
+  try {
+    const { studentName = 'Student', email = 'student@example.com' } = req.body;
+    const orderId = `ORD_500_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // Fee is strictly 500 Rupees (INR)
+    const fixedFee = 500;
+    const baseAmount = +(fixedFee / 1.18).toFixed(2);
+    const gstAmount = +(fixedFee - baseAmount).toFixed(2);
+
+    res.json({
+      success: true,
+      order: {
+        orderId,
+        amount: fixedFee,
+        currency: 'INR',
+        currencySymbol: '₹',
+        formattedAmount: '₹500.00',
+        studentName,
+        email,
+        title: 'AI CodeAcademy Full Course Enrollment & Pro Pass',
+        description: 'Complete 3-Milestone Curriculum, Live AI Code Doctor, Unlimited Professor Byte AI Teacher & Verified Certificate',
+        breakdown: {
+          baseAmount,
+          gstAmount,
+          totalAmount: fixedFee
+        },
+        upiVpa: 'aicodeacademy@upi',
+        upiQrPayload: `upi://pay?pa=aicodeacademy@upi&pn=AI%20CodeAcademy&am=500.00&cu=INR&tn=Course%20Enrollment%20500%20RS%20${orderId}`
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to initialize payment order' });
+  }
+});
+
+// Process and verify 500 RS payment
+app.post('/api/payment/verify', (req, res) => {
+  try {
+    const { 
+      orderId, 
+      studentName = 'Alex', 
+      paymentMethod = 'UPI',
+      upiId,
+      cardNumber,
+      cardHolder,
+      bankName
+    } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ error: 'Order ID is required' });
+    }
+
+    const receiptId = `INV-500-${Date.now().toString().slice(-6)}`;
+    const enrollmentNo = `ACAD-IN-500-${Math.floor(100000 + Math.random() * 900000)}`;
+    const utrNumber = `UTR${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+    const accessPassKey = `PASS-500-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+
+    let paymentDetails = 'UPI (Instant Transfer)';
+    if (paymentMethod === 'UPI' && upiId) {
+      paymentDetails = `UPI ID: ${upiId}`;
+    } else if (paymentMethod === 'Card' && cardNumber) {
+      const last4 = cardNumber.replace(/\s+/g, '').slice(-4) || '4242';
+      paymentDetails = `Card: ending in ${last4} (${cardHolder || 'Student'})`;
+    } else if (paymentMethod === 'NetBanking') {
+      paymentDetails = `Net Banking: ${bankName || 'HDFC Bank'}`;
+    }
+
+    const record: PaymentRecord = {
+      receiptId,
+      orderId,
+      studentName,
+      amount: 500,
+      currency: 'INR',
+      formattedAmount: '₹500.00',
+      paymentMethod: paymentMethod as any,
+      paymentDetails,
+      utrNumber,
+      status: 'SUCCESS',
+      timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
+      enrollmentNo,
+      accessPassKey,
+      breakdown: {
+        baseAmount: 423.73,
+        gstAmount: 76.27,
+        totalAmount: 500.00
+      }
+    };
+
+    paymentLedger.set(receiptId, record);
+    paymentLedger.set(orderId, record);
+
+    res.json({
+      success: true,
+      receipt: record
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to verify payment' });
+  }
+});
+
+// Retrieve receipt
+app.get('/api/payment/receipt/:id', (req, res) => {
+  const { id } = req.params;
+  const record = paymentLedger.get(id);
+  if (!record) {
+    return res.status(404).json({ error: 'Receipt not found' });
+  }
+  res.json({ success: true, receipt: record });
+});
+
 // --- Vite Middleware for Development / Static in Production ---
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

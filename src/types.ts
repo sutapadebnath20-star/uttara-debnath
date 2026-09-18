@@ -7,6 +7,22 @@ export type LearningGoal =
   | 'automation_python' 
   | 'cs_fundamentals';
 
+export interface PaymentReceipt {
+  receiptId: string;
+  orderId: string;
+  studentName: string;
+  amount: number; // 500
+  currency: string; // "INR"
+  formattedAmount: string; // "₹500.00"
+  paymentMethod: 'UPI' | 'Card' | 'NetBanking';
+  paymentDetails: string; // e.g. "GPay (alex@okhdfcbank)" or "HDFC Debit Card ending in 4242"
+  utrNumber: string;
+  status: 'SUCCESS' | 'PENDING' | 'FAILED';
+  timestamp: string;
+  enrollmentNo: string;
+  accessPassKey: string;
+}
+
 export interface StudentProfile {
   name: string;
   skillLevel: SkillLevel;
@@ -17,6 +33,9 @@ export interface StudentProfile {
   streakDays: number;
   completedLessonIds: string[];
   completedChallengeIds: string[];
+  isEnrolled: boolean;
+  enrollmentFeePaid: number; // 500
+  paymentReceipt?: PaymentReceipt;
 }
 
 export interface LessonItem {
