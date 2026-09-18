@@ -1,0 +1,6 @@
+{
+  "name": "AI CodeAcademy - Interactive Coding Tutor",
+  "description": "Free personalized AI coding education platform with dynamic learning paths, interactive challenges with live AI hints, and project assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
